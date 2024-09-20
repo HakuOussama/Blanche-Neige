@@ -12,26 +12,53 @@ public class SeptNains {
     final static String noms [] = {"Simplet", "Dormeur",  "Atchoum", "Joyeux", "Grincheux",
                                    "Prof", "Timide"};
   
-        public static void main(String[] args) throws InterruptedException {
-        final Nain nain [] = new Nain [nbNains];
-        for(int i = 0; i < nbNains; i++) nain[i] = new Nain(noms[i]);
-        for(int i = 0; i < nbNains; i++) {
-            nain[i].start();
-        }
-        Thread.sleep(5000);
-        for(int i = 0; i < nbNains; i++) {
-            nain[i].interrupt();
-        }
-        while(true){
-            boolean done=true;
-            for(Nain nain1 : nain){
-                done =done && nain1.isInterrupted();
-            }
-            if(done)
-                break;
-        }
-        affiche("Programme Terminer");
+     public static void main(String[] args) throws InterruptedException {
+
+    final Nain nain[] = new Nain[nbNains];
+
+    // Initialize and start all Nain threads
+    for (int i = 0; i < nbNains; i++) {
+        nain[i] = new Nain(noms[i]);
+        nain[i].start();
     }
+
+    Long start = System.currentTimeMillis();
+
+    // Wake up all waiting threads during the first 5 seconds
+    while (System.currentTimeMillis() - start <= 5000) {
+        for (Nain n : nain) {
+            synchronized (n) { // Synchronize on the object (nain)
+                if (n.getState().equals(Thread.State.WAITING)) {
+                    n.notify(); // Wake up the waiting thread
+                    affiche("Réveille chaque nain en attente du privilège.");
+                }
+            }
+            Thread.sleep(100); // Wait 100ms between checks
+        }
+    }
+
+    // Sleep for 5 seconds before interrupting all threads
+    Thread.sleep(5000);
+
+    // Interrupt all Nain threads
+    for (int i = 0; i < nbNains; i++) {
+        nain[i].interrupt();
+    }
+
+    // Ensure all Nain threads are interrupted before proceeding
+    while (true) {
+        boolean allInterrupted = true;
+        for (Nain n : nain) {
+            allInterrupted = allInterrupted && n.isInterrupted();
+        }
+        if (allInterrupted) {
+            break;
+        }
+    }
+
+    affiche("Constat que tous les nains ont terminé.");
+}
+
 
     
     static class Nain extends Thread {
@@ -46,7 +73,7 @@ public class SeptNains {
                 try {
                     bn.accéder();
                 } catch (InterruptedException e) {
-                    affiche("adios amongous");
+                    affiche("Au  revoir");
                     currentThread().interrupt();
                     break;
                 }
@@ -57,13 +84,15 @@ public class SeptNains {
                 } catch (InterruptedException e) {
 
                     try {
+
+
                         sleep(System.currentTimeMillis() - start);
                     } catch (InterruptedException ex) {
                         throw new RuntimeException(ex);
                     }
 
 
-                    affiche("Adieux");
+                    affiche("au revoir");
 
                     currentThread().interrupt();
                     break;
@@ -89,8 +118,14 @@ public class SeptNains {
         }
         
         public synchronized void accéder() throws InterruptedException {
-            System.out.println("la file d'attente : "+fileAttente);
-            while ( ! libre || !Thread.currentThread().getName().equals(fileAttente.get(0))) wait() ;                // Le nain attend passivement son tour
+           // System.out.println("la file d'attente : "+fileAttente);
+            while ( ! libre || !Thread.currentThread().getName().equals(fileAttente.get(0))){
+                if (Thread.currentThread().getName().equals("Grincheux")) {
+                    affiche("Et Alors?");
+                    wait(1000); //<Grincheux sa patience termine dans une second
+                }
+                else
+                    wait() ;}                // Le nain attend passivement son tour
             libre = false;
             affiche("accède à la ressource");
         }
