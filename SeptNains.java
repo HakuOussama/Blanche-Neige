@@ -56,7 +56,7 @@ public class SeptNains {
         }
     }
 
-    affiche("Constat que tous les nains ont terminé.");
+    affiche("Constat que tous les nains ont terminé");
 }
 
 
@@ -73,7 +73,7 @@ public class SeptNains {
                 try {
                     bn.accéder();
                 } catch (InterruptedException e) {
-                    affiche("Au  revoir");
+                    affiche("Au  revoir !");
                     currentThread().interrupt();
                     break;
                 }
@@ -92,7 +92,7 @@ public class SeptNains {
                     }
 
 
-                    affiche("au revoir");
+                    affiche(" dit au revoir !");
 
                     currentThread().interrupt();
                     break;
